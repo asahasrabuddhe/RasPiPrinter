@@ -1,0 +1,32 @@
+#cloud-config
+# First-boot setup for the HP LaserJet P1008 print server.
+# build.sh fills in the password hash. Do not edit the copy on the card.
+
+hostname: ajitem-pi-printer
+manage_etc_hosts: true
+timezone: Asia/Kolkata
+keyboard:
+  model: pc105
+  layout: "in"
+
+users:
+- name: ajitem
+  shell: /bin/bash
+  groups: [adm, sudo, plugdev, users]
+  lock_passwd: false
+  passwd: "__PASSWORD_HASH__"
+
+enable_ssh: true
+ssh_pwauth: true
+
+# Packages and printer setup run from printserver-firstboot.service, not
+# from cloud-init's packages module. The Pi 2 has no battery-backed clock
+# and boots at the image's build date, so apt has to wait for network time.
+# The service waits for it, retries, and runs again at each boot until
+# setup succeeds.
+runcmd:
+- [install, -D, -m, "0755", /boot/firmware/printserver/firstboot.sh, /usr/local/sbin/printserver-firstboot]
+- [install, -D, -m, "0644", /boot/firmware/printserver/printserver-firstboot.service, /etc/systemd/system/printserver-firstboot.service]
+- [systemctl, daemon-reload]
+- [systemctl, enable, printserver-firstboot.service]
+- [systemctl, start, --no-block, printserver-firstboot.service]
