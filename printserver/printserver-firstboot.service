@@ -1,0 +1,16 @@
+[Unit]
+Description=One-time print server setup (packages, CUPS, P1008 driver)
+Wants=network-online.target
+After=network-online.target time-sync.target
+ConditionPathExists=!/var/lib/printserver/setup-done
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/printserver-firstboot
+Restart=on-failure
+RestartSec=60
+TimeoutStartSec=2h
+
+[Install]
+WantedBy=multi-user.target
