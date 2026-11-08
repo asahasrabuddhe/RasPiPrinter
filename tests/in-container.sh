@@ -132,11 +132,16 @@ lpstat -p HP_LaserJet_P1008 | grep -q 'enabled' || fail "queue not enabled"
 ! lpstat -v HP_LaserJet_P1008_hplip >/dev/null 2>&1 || fail "duplicate hp: queue kept"
 lpstat -v Other >/dev/null 2>&1 || fail "unrelated queue removed"
 pass "printer on: shared A4 foo2xqx queue, default, duplicates removed, others kept"
+! grep -q '^\*Resolution 600x600dpi' /etc/cups/ppd/HP_LaserJet_P1008.ppd || fail "faint 600x600 mode still offered"
+grep -q '^\*Resolution 1200x600dpi' /etc/cups/ppd/HP_LaserJet_P1008.ppd || fail "1200x600 mode missing"
+grep -q '^\*DefaultResolution: 1200x600dpi' /etc/cups/ppd/HP_LaserJet_P1008.ppd || fail "default resolution not 1200x600"
+pass "queue offers only 1200x600 dpi (600x600 prints faint)"
 
 # Second run (printer power-cycled): no changes, still ready.
 cupsdisable HP_LaserJet_P1008
 /usr/local/sbin/p1008-setup > /tmp/setup2.out 2>&1 || fail "second run failed"
 ! grep -q 'set up on' /tmp/setup2.out || fail "second run recreated the queue"
+! grep -q 'removed the faint' /tmp/setup2.out || fail "second run edited the PPD again"
 lpstat -p HP_LaserJet_P1008 | grep -q 'enabled' || fail "second run did not re-enable a stopped queue"
 pass "second run: idempotent, re-enables a stopped queue"
 

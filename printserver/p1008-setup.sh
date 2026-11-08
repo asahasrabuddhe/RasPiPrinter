@@ -71,6 +71,18 @@ lpstat -v 2>/dev/null | sed -n 's/^device for \([^:]*\): \(.*\)$/\1 \2/p' |
         esac
     done
 
+# The P1008 prints faint at 600x600 dpi. Windows' IPP Class Driver always
+# asks for 600x600, so offer only 1200x600 (the driver's default, which
+# prints at full density). Tested on the real printer, same PDF both ways.
+ppd="/etc/cups/ppd/$QUEUE.ppd"
+if grep -q '^\*Resolution 600x600dpi' "$ppd" 2>/dev/null; then
+    tmp=$(mktemp)
+    sed '/^\*Resolution 600x600dpi/d' "$ppd" > "$tmp"
+    lpadmin -p "$QUEUE" -P "$tmp"
+    rm -f "$tmp"
+    log "removed the faint 600x600 dpi mode from $QUEUE"
+fi
+
 lpadmin -d "$QUEUE"
 cupsenable "$QUEUE"
 cupsaccept "$QUEUE"
