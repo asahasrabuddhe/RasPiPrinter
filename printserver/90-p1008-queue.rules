@@ -1,0 +1,2 @@
+# Run p1008-setup.service whenever the HP LaserJet P1008 appears on USB.
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="03f0", ATTR{product}=="HP LaserJet P1008", TAG+="systemd", ENV{SYSTEMD_WANTS}+="p1008-setup.service"
